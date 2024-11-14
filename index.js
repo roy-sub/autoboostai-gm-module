@@ -12,11 +12,20 @@ app.get("/", (req, res) => {
 app.get("/get_profile_urls", async (req, res) => {
   try {
     const query = req.query.query;
+    const limit = req.query.limit;
+
     if (!query) {
       return res.status(400).send("Error: input query is required");
     }
+    
+    if (!limit) {
+      return res.status(400).send("Error: limit is required");
+    }
 
-    const data = await scrapeGoogleMapsTitlesAndHref(query);
+    // Convert limit to number
+    const numLimit = parseInt(limit);
+    
+    const data = await scrapeGoogleMapsTitlesAndHref(query, numLimit);
     res.json(data);
   } catch (error) {
     const errorMessage = `Error: ${error.message}`;
