@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 require("dotenv").config();
 
-const scrapeGoogleMapsTitlesAndHref = async (query) => {
+const scrapeGoogleMapsTitlesAndHref = async (query, numLimit) => {
   let browser = null;
   try {
     // Launch browser with additional configurations
@@ -65,7 +65,7 @@ const scrapeGoogleMapsTitlesAndHref = async (query) => {
       visible: true 
     });
 
-    // Scroll until all results are loaded
+    // Scroll until all results are loaded or limit is reached
     let data = [];
     let lastHeight = 0;
     let currentHeight = 0;
@@ -74,6 +74,7 @@ const scrapeGoogleMapsTitlesAndHref = async (query) => {
     const startTime = Date.now();
 
     while (true) {
+      // Check if we've reached the time limit
       if (Date.now() - startTime > SCROLL_TIMEOUT) {
         console.log("Scroll timeout reached after 3 minutes");
         break;
@@ -111,6 +112,13 @@ const scrapeGoogleMapsTitlesAndHref = async (query) => {
 
       // Combine new data with existing data, removing duplicates
       data = [...new Set([...data, ...newData])];
+
+      // Check if we've reached the numLimit
+      if (numLimit && data.length >= numLimit) {
+        console.log(`Reached specified limit of ${numLimit} results`);
+        data = data.slice(0, numLimit); // Ensure we only return exactly numLimit results
+        break;
+      }
 
       // Check if we've reached the end of the list
       const endOfListFound = await page.evaluate(() => {
